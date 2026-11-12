@@ -20,7 +20,7 @@ Aplicação web didática para a atividade prática de **Segurança da Informaç
 | 5 | **Desafios por RA** | Lê os 2 últimos dígitos do RA e apresenta o desafio: 00–19 arquivos (AES), 20–39 integridade (SHA-256), 40–59 RSA-OAEP, 60–79 **simulação didática** de TLS, 80–99 dados armazenados (AES + PBKDF2). Objetivo, etapas, ferramenta, perguntas e evidências. |
 | 6 | **Proteção de dados pessoais** (Módulo 7 do enunciado) | Cadastro **fictício** gerado a cada sessão; tabela por campo; Etapas 1–7 (nome, telefone, hash do RG, endereço, criptografia híbrida AES + RSA, comparação, reflexão e LGPD). |
 | 7 | **Evidências** | Formulário (RA, desafio, técnica, mensagem, resultado, explicação, dificuldades, conclusão), capturas de tela e registro automático das operações. |
-| 8 | **Relatório** | PDF com identificação, datas, módulos, técnicas, resultados, evidências, respostas, conclusão e referências — sem chaves privadas. |
+| 8 | **Relatório** | PDF **e Word (.docx)** no formato de relatório de entrega da instituição (logos, tabela de identificação, instruções com entrega pelo Microsoft Teams, quadros de evidências e perguntas), sem chaves privadas. |
 | — | **Referências** | ABNT NBR 6023:2018, com chamadas autor-data no texto. |
 
 ### O que é real e o que é didático
@@ -70,16 +70,16 @@ O `vercel.json` também aplica cabeçalhos de segurança, incluindo uma **Conten
 
 ## Testes
 
-**Unitários (`npm test`, 39 testes)** — `src/test/`:
+**Unitários (`npm test`, 40 testes)** — `src/test/`:
 - AES-256-GCM: ida e volta, IV aleatório, adulteração e chave errada rejeitadas, vetor de teste conhecido do GCM, pacote `.clab`.
 - RSA-OAEP: geração 2048 bits, cifrar/decifrar, limite de 190 bytes, chave privada errada.
 - SHA-256: vetores da FIPS 180-4 (`abc` e vazio), efeito avalanche no RG.
 - Criptografia híbrida: recuperação da chave AES e do cadastro; chave errada falha.
 - ECDH + HKDF (mesma chave de sessão) e ECDSA.
 - Cifra de César, rede de Feistel de brinquedo (reversibilidade), identificação por RA em todas as faixas e limites, dados fictícios, remoção de segredos.
-- Relatório PDF: seções obrigatórias e ausência de chave privada.
+- Relatório PDF e Word: seções obrigatórias, instruções do Teams, imagens e ausência de chave privada.
 
-**Ponta a ponta (`e2e/run.mjs`, 44 verificações)** — percorre todos os módulos em um Chrome real: todos os botões das simulações, os 5 desafios por RA, as 7 etapas de proteção de dados, anexo de evidência, download do PDF, responsividade em 390 px (sem rolagem horizontal), menu móvel, **nenhuma requisição externa** e nenhum erro no console.
+**Ponta a ponta (`e2e/run.mjs`, 45 verificações)** — percorre todos os módulos em um Chrome real: todos os botões das simulações, os 5 desafios por RA, as 7 etapas de proteção de dados, anexo de evidência, download do PDF e do Word, responsividade em 390 px (sem rolagem horizontal), menu móvel, **nenhuma requisição externa** e nenhum erro no console.
 
 ```bash
 npm run build && npm run preview &        # em outro terminal

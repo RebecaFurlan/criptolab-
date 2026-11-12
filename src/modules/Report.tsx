@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { CheckCircle2, Circle, Download, FileText, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Circle, Download, FileText, FileType2, ShieldCheck } from 'lucide-react';
 import { buildReport, reportFilename } from '../lib/report';
 import logoUrl from '../assets/logos-instituicao.jpg';
+import { downloadBytes } from '../lib/download';
+import { dataUrlToBytes, reportDocxFilename } from '../lib/reportDocx';
 import { REQUIRED_EVIDENCE } from '../data/questions';
 import { MODULE_LABEL } from '../nav';
 import { MODULE_REQUIREMENTS, useLab, type ModuleId } from '../store';
@@ -27,10 +29,33 @@ export default function Report() {
   const { state, progress, mark, addLog } = useLab();
   const [msg, setMsg] = useState<StatusMsg>(null);
   const [busy, setBusy] = useState(false);
+  const [busyDocx, setBusyDocx] = useState(false);
   const [blobUrl, setBlobUrl] = useState('');
 
   const missing = REQUIRED_EVIDENCE.filter((k) => !state.evidence[k].trim());
   const answered = Object.values(state.answers).filter((a) => a.trim()).length;
+
+  const generateDocx = async () => {
+    setBusyDocx(true);
+    setMsg(null);
+    try {
+      // Carregado sob demanda para não pesar o restante do site.
+      const [{ buildReportDocx }, { Packer }] = await Promise.all([import('../lib/reportDocx'), import('docx')]);
+      mark('rel:gerado');
+      addLog({ module: 'relatorio', technique: 'Relatório', action: 'Relatório Word (.docx) gerado', ok: true });
+      const withDone = { ...state, milestones: { ...state.milestones, 'rel:gerado': 'ok' } };
+      const logo = await loadLogo();
+      const doc = buildReportDocx(withDone, { logo: logo ? dataUrlToBytes(logo) : undefined });
+      const blob = await Packer.toBlob(doc);
+      const name = reportDocxFilename(state);
+      downloadBytes(new Uint8Array(await blob.arrayBuffer()), name, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      setMsg({ kind: 'success', text: `Relatório “${name}” gerado em Word. Abra, confira, cole os prints nos quadros indicados e entregue no Teams.` });
+    } catch (e) {
+      setMsg({ kind: 'error', text: `Não foi possível gerar o Word: ${(e as Error).message}` });
+    } finally {
+      setBusyDocx(false);
+    }
+  };
 
   const generate = async () => {
     setBusy(true);
@@ -108,6 +133,9 @@ export default function Report() {
         <div className="flex flex-wrap items-center gap-3">
           <Button icon={Download} onClick={generate} loading={busy}>
             Gerar relatório PDF
+          </Button>
+          <Button variant="secondary" icon={FileType2} onClick={generateDocx} loading={busyDocx}>
+            Gerar relatório Word (.docx)
           </Button>
           {blobUrl && (
             <a href={blobUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-cyan-300 hover:underline">

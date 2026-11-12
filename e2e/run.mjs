@@ -145,7 +145,12 @@ for (const [ra, title] of raCases) {
     check('Banco: leitura autorizada', await has('recuperou os dados originais'));
     await clickBtn('Invasor tenta ler o banco', { wait: 2500 });
     check('Banco: invasor falha', await has('Resultado esperado'));
-    for (let i = 1; i <= 3; i++) await page.locator(`#q-desafio\\:armazenados\\:q${i}`).fill(`Resposta de teste número ${i} do estudante.`);
+    const dq = [
+      'Ele obtém apenas o texto cifrado em Base64, que não tem sentido sem a chave AES. Os nomes dos clientes, que não foram cifrados, continuariam expostos.',
+      'Porque quem copiar o banco levaria junto a chave e conseguiria decifrar tudo. A chave deve ficar em outro local protegido, como um cofre de chaves.',
+      'O PBKDF2 transforma a frase-senha em uma chave forte e deixa cada tentativa de adivinhação lenta. O salt faz a mesma senha gerar chaves diferentes em cada sistema.',
+    ];
+    for (let i = 1; i <= 3; i++) await page.locator(`#q-desafio\\:armazenados\\:q${i}`).fill(dq[i - 1]);
     await clickBtn('Enviar resultado para Evidências');
     check('Banco: resultado enviado às evidências', page.url().includes('evidencias'));
   }
@@ -179,17 +184,34 @@ for (let i = 1; i <= 6; i++) {
 check('Etapa 5: cadastro recuperado pela híbrida', await has('Cadastro recuperado integralmente'));
 await clickBtn('Gerar comparação');
 check('Etapa 6: tabela comparativa', await has('Possibilidade de recuperação'));
-for (let i = 1; i <= 7; i++) await page.locator(`#q-lgpd\\:q${i}`).fill(`Resposta de reflexão número ${i} sobre a LGPD.`);
-for (let i = 1; i <= 5; i++) await page.locator(`#q-prot\\:q${i}`).fill(`Resposta da etapa ${i}.`);
+const lq = [
+  'Não. Sem a chave, ele vê apenas texto cifrado sem sentido no lugar do nome, telefone e endereço.',
+  'Se obtiver as chaves, ele consegue descriptografar os dados. Por isso as chaves precisam ficar separadas do banco e com acesso restrito.',
+  'A criptografia é reversível com a chave e protege o sigilo. O hash é irreversível e serve para verificar integridade ou comparar valores.',
+  'Não. Ela reduz o impacto, mas ainda há riscos como roubo de chaves, senhas fracas, dados não cifrados (como o e-mail) e erros humanos.',
+  'Controle de acesso, autenticação forte, gestão de chaves, backups, atualizações, registro de acessos, treinamento e plano de resposta a incidentes.',
+  'Porque o vazamento pode causar fraudes, golpes e danos às pessoas, além de prejuízos e sanções para a empresa.',
+  'A LGPD exige medidas de segurança para proteger dados pessoais (art. 46). Dados cifrados e ininteligíveis reduzem a gravidade de um incidente (art. 48, § 3º).',
+];
+const pq = [
+  'Porque o AES embaralhou os bytes do nome usando a chave secreta; sem a chave, o resultado parece aleatório.',
+  'Não. Sem a chave ele vê apenas o texto cifrado do telefone.',
+  'Uma pequena mudança gera um hash totalmente diferente (efeito avalanche). O hash é de mão única, então não há como voltar ao RG.',
+  'O original é legível e o cifrado é uma sequência sem sentido em Base64. Foi preciso a mesma chave AES e o IV para recuperá-lo.',
+  'O AES é rápido para cifrar muitos dados, e o RSA resolve o envio seguro da chave, já que só cifra mensagens pequenas.',
+];
+for (let i = 1; i <= 7; i++) await page.locator(`#q-lgpd\\:q${i}`).fill(lq[i - 1]);
+for (let i = 1; i <= 5; i++) await page.locator(`#q-prot\\:q${i}`).fill(pq[i - 1]);
 await page.waitForTimeout(300);
 check('Etapa 7: texto da LGPD sobre dados sensíveis', await has('não são automaticamente classificados como dados pessoais'));
 await shot('10-protecao');
 
 // Evidências
 await go('evidencias');
-await page.locator('#ev-explicacao').fill('O dado ficou ilegível sem a chave.');
-await page.locator('#ev-dificuldades').fill('Entender o IV.');
-await page.locator('#ev-conclusao').fill('Criptografia protege, hash verifica.');
+await page.locator('#ev-explicacao').fill('Ao cifrar a coluna de observações, o banco passou a guardar apenas texto em Base64 sem sentido. Com a frase-senha correta, o aplicativo recuperou os dados originais; com outra senha, a descriptografia falhou.');
+await page.locator('#ev-turma').fill('2º semestre - noite');
+await page.locator('#ev-dificuldades').fill('Entender a função do IV no AES-GCM e por que a chave privada do RSA não pode ser compartilhada.');
+await page.locator('#ev-conclusao').fill('A criptografia protege o sigilo dos dados mesmo em caso de vazamento, desde que a chave fique guardada separadamente. O hash serve para verificar integridade, mas não permite recuperar a informação.');
 // anexo de imagem (captura da própria página)
 await page.screenshot({ path: '/tmp/evid.png' });
 await page.locator('input[type=file]').first().setInputFiles('/tmp/evid.png');
@@ -208,6 +230,11 @@ await d.saveAs(pdfPath);
 const pdf = fs.readFileSync(pdfPath).toString('latin1');
 check('PDF gerado', pdf.startsWith('%PDF'), d.suggestedFilename());
 check('PDF sem chave privada', !pdf.includes('PRIVATE KEY'));
+const dl2 = page.waitForEvent('download');
+await clickBtn('Gerar relatório Word', { wait: 1500 });
+const d2 = await dl2;
+await d2.saveAs(`${OUT}/relatorio.docx`);
+check('Word gerado', d2.suggestedFilename().endsWith('.docx'), d2.suggestedFilename());
 await go('inicio');
 const pct = await page.locator('[role=progressbar]').first().getAttribute('aria-valuenow');
 check('Progresso geral 100%', pct === '100', `${pct}%`);
