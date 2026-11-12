@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Circle, Download, FileText, FileType2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Circle, Download, FileText, FileType2, Send, ShieldCheck } from 'lucide-react';
 import { buildReport, reportFilename } from '../lib/report';
 import logoUrl from '../assets/logos-instituicao.jpg';
 import { downloadBytes } from '../lib/download';
@@ -128,6 +128,27 @@ export default function Report() {
           .
         </Callout>
       )}
+
+      <Card title="Como entregar no Microsoft Teams" icon={Send}>
+        <ol className="space-y-2 text-sm text-slate-200">
+          {[
+            'Gere o relatório em Word (.docx) pelo botão abaixo e abra o arquivo.',
+            'Confira as respostas e cole os prints nos quadros indicados (no Windows: Windows + Shift + S e depois Ctrl + V).',
+            'Salve o arquivo com o nome relatorio-criptolab-SEU-RA.docx.',
+            'No Teams, abra a equipe da disciplina e vá em Tarefas.',
+            'Abra a tarefa “Laboratório de Criptografia” e clique em “Adicionar trabalho”.',
+            'Envie o arquivo .docx (se o professor pedir, envie também o PDF).',
+            'Clique em “Entregar” e confira se o status mudou para entregue.',
+          ].map((t, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="font-mono text-cyan-300">{i + 1}.</span> {t}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs text-slate-400">
+          A atividade é individual: relatórios com RA de outra pessoa ou respostas copiadas serão considerados plágio. Use somente os dados fictícios do laboratório.
+        </p>
+      </Card>
 
       <Card>
         <div className="flex flex-wrap items-center gap-3">
